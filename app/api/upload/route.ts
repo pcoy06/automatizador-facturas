@@ -14,7 +14,13 @@ export async function POST(request: Request) {
 
     // Create a new FormData instance for the external request
     const externalFormData = new FormData();
-    externalFormData.append('file', file);
+
+    // Read file content and append as Blob to ensure correct binary transmission
+    const fileBuffer = await file.arrayBuffer();
+    const fileBlob = new Blob([fileBuffer], { type: file.type });
+    externalFormData.append('file', fileBlob, file.name);
+
+    console.log(`Forwarding file to n8n: ${file.name} (${fileBlob.size} bytes)`);
 
     // Send to n8n webhook
     // Use fallback values if environment variables are not set (e.g. in Netlify without manual config)

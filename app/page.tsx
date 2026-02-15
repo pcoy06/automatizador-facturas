@@ -74,19 +74,36 @@ export default function Home() {
     setStatus('uploading')
     setMessage('Subiendo...')
 
+    // Usar la URL directa expuesta al cliente
+    const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || 'https://coy-personal-n8n.l2p5bx.easypanel.host/webhook/procesador-facturas';
+    const apiKey = process.env.NEXT_PUBLIC_WEBHOOK_API_KEY || 'rJbYEKt4p4QU7O7EmfkrUvEU0bHjv54a';
+
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const res = await fetch('/api/upload', {
+      console.log('Iniciando subida directa a:', webhookUrl);
+
+      const res = await fetch(webhookUrl, {
         method: 'POST',
         body: formData,
+        headers: {
+          'miapikey': apiKey,
+          // 'Content-Type': 'multipart/form-data', // NO AGREGAR ESTO MANUALMENTE CON FETCH, el navegador lo hace solo con el boundary correcto
+        }
       })
 
-      const data = await res.json()
+      // n8n a veces devuelve texto plano o JSON
+      let data;
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text };
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Upload failed')
+        throw new Error(data.message || data.error || 'Error en el webhook de n8n')
       }
 
       setStatus('success')
@@ -95,7 +112,7 @@ export default function Home() {
     } catch (error: any) {
       console.error('Upload error:', error)
       setStatus('error')
-      setMessage(error.message || 'Error al subir la factura. Inténtalo de nuevo.')
+      setMessage(`Error: ${error.message}. Verifica si n8n permite conexiones (CORS).`)
     }
   }
 

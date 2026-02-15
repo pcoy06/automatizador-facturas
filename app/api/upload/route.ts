@@ -17,8 +17,9 @@ export async function POST(request: Request) {
     externalFormData.append('file', file);
 
     // Send to n8n webhook
-    const webhookUrl = process.env.WEBHOOK_URL || '';
-    const apiKey = process.env.WEBHOOK_API_KEY || '';
+    // Use fallback values if environment variables are not set (e.g. in Netlify without manual config)
+    const webhookUrl = process.env.WEBHOOK_URL || 'https://coy-personal-n8n.l2p5bx.easypanel.host/webhook/procesador-facturas';
+    const apiKey = process.env.WEBHOOK_API_KEY || 'rJbYEKt4p4QU7O7EmfkrUvEU0bHjv54a';
 
     // Set a longer timeout for the fetch if needed by using AbortController (optional but good practice)
     // const controller = new AbortController();
